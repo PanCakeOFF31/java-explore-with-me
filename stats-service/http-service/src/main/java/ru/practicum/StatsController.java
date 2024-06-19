@@ -9,7 +9,6 @@ import ru.practicum.model.StatRequestDto;
 import ru.practicum.model.StatResponseDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Pattern;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
