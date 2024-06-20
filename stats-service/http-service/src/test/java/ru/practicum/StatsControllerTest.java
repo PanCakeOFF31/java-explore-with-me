@@ -15,8 +15,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.model.StatRequestDto;
-import ru.practicum.model.StatResponseDto;
+import ru.practicum.model.stat.dto.StatRequestDto;
+import ru.practicum.model.stat.dto.StatResponseDto;
+import ru.practicum.stat.StatsController;
+import ru.practicum.stat.StatsService;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;

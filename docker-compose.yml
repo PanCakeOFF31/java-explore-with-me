@@ -12,7 +12,7 @@ services:
 
   ewm-stats-service:
     build: ./stats-service/http-service/
-    image: ewm-stats-service:v1.0.7
+    image: ewm-stats-service:v1.0.9
     container_name: ewm-stats-service
     ports:
       - "9090:9090"

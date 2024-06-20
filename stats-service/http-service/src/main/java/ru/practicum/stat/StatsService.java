@@ -1,8 +1,8 @@
-package ru.practicum;
+package ru.practicum.stat;
 
 
-import ru.practicum.model.StatRequestDto;
-import ru.practicum.model.StatResponseDto;
+import ru.practicum.model.stat.dto.StatRequestDto;
+import ru.practicum.model.stat.dto.StatResponseDto;
 
 import java.util.List;
 

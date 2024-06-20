@@ -1,11 +1,16 @@
-package ru.practicum;
+package ru.practicum.stat;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.app.AppRepository;
 import ru.practicum.exception.InvalidDurationException;
-import ru.practicum.model.*;
+import ru.practicum.model.app.App;
+import ru.practicum.model.stat.Stat;
+import ru.practicum.model.stat.dto.StatMapper;
+import ru.practicum.model.stat.dto.StatRequestDto;
+import ru.practicum.model.stat.dto.StatResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

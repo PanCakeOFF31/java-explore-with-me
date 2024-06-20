@@ -1,4 +1,6 @@
-package ru.practicum.model;
+package ru.practicum.model.stat.dto;
+
+import ru.practicum.model.stat.Stat;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;

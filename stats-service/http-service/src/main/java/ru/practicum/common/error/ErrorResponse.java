@@ -1,4 +1,4 @@
-package ru.practicum.exception;
+package ru.practicum.common.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

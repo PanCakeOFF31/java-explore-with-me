@@ -13,9 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.client.MockRestServiceServer;
-import ru.practicum.model.StatMapper;
-import ru.practicum.model.StatRequestDto;
-import ru.practicum.model.StatResponseDto;
+import ru.practicum.model.stat.dto.StatMapper;
+import ru.practicum.model.stat.dto.StatRequestDto;
+import ru.practicum.model.stat.dto.StatResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

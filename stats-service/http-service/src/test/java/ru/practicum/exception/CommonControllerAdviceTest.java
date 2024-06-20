@@ -2,6 +2,8 @@ package ru.practicum.exception;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.practicum.common.error.ErrorResponse;
+import ru.practicum.common.handler.CommonControllerAdvice;
 
 import java.time.format.DateTimeParseException;
 
@@ -19,6 +21,10 @@ class CommonControllerAdviceTest {
     @Test
     public void test_T0010_PS01_handleMethodNotImplemented() {
         ErrorResponse response = commonControllerAdvice.handleMethodNotImplemented(new MethodNotImplemented(""));
+        assertEquals("Ошибка выполнения endpoint", response.getError());
+        assertTrue(response.getDescription().startsWith("Проблемы с реализацией endpoint"));
+
+        response = commonControllerAdvice.handleMethodNotImplemented(new MethodNotImplemented());
         assertEquals("Ошибка выполнения endpoint", response.getError());
         assertTrue(response.getDescription().startsWith("Проблемы с реализацией endpoint"));
     }

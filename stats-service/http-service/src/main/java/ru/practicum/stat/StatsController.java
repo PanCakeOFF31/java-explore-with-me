@@ -1,12 +1,11 @@
-package ru.practicum;
+package ru.practicum.stat;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.model.StatRequestDto;
-import ru.practicum.model.StatResponseDto;
+import ru.practicum.model.stat.dto.StatRequestDto;
+import ru.practicum.model.stat.dto.StatResponseDto;
 
 import javax.validation.Valid;
 import java.net.URLDecoder;
@@ -14,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
-@Validated
 @RestController
 @RequestMapping
 @RequiredArgsConstructor

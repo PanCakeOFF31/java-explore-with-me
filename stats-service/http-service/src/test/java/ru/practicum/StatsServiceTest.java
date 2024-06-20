@@ -6,6 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.app.AppRepository;
+import ru.practicum.stat.StatRepository;
+import ru.practicum.stat.StatsServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class StatsServiceTest {

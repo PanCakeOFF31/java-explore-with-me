@@ -1,6 +1,7 @@
-package ru.practicum.model;
+package ru.practicum.model.stat;
 
 import lombok.*;
+import ru.practicum.model.app.App;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
