@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
-import org.springframework.test.context.ContextConfiguration;
 import ru.practicum.model.stat.dto.StatRequestDto;
 
 import java.io.IOException;
@@ -17,7 +16,6 @@ import static ru.practicum.model.stat.dto.StatMapper.dateTimeFormatter;
 
 @JsonTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@ContextConfiguration()
 class StatRequestDtoTest {
     private final JacksonTester<StatRequestDto> json;
 

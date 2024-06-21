@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,7 +21,7 @@ public class StatRequestDto {
     @NotEmpty
     private String uri;
     @NotEmpty
-    @Pattern(regexp = "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$", message = "IP-адрес не соответствует стандарту")
+    @Size(min = 7, max = 45, message = "Stat.ip - Минимальная длина ip-адреса - {min}, а максимальная {max} символов")
     private String ip;
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

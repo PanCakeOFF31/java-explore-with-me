@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.app.AppRepository;
-import ru.practicum.exception.InvalidDurationException;
+import ru.practicum.common.exception.InvalidDurationException;
 import ru.practicum.model.app.App;
 import ru.practicum.model.stat.Stat;
 import ru.practicum.model.stat.dto.StatMapper;
@@ -57,13 +57,13 @@ public class StatsServiceImpl implements StatsService {
             throw new InvalidDurationException(message);
         }
 
-        if (uris.length == 0 && unique) {
+        if (uris == null && unique) {
             log.info("Запрос на выборку где uris - пустой и ip - уникальные");
             return StatMapper.mapToStatResponseViewDto(statRepository
                     .findAllUniqueByRequestedBetween(startTime, endTime));
         }
 
-        if (uris.length == 0) {
+        if (uris == null) {
             log.info("Запрос на выборку где uris - пустой и ip - неуникальные");
             return StatMapper.mapToStatResponseViewDto(statRepository
                     .findAllByRequestedBetweenOrderByRequestedDesc(startTime, endTime));
@@ -78,5 +78,12 @@ public class StatsServiceImpl implements StatsService {
         log.info("Запрос на выборку где uris - не пустой и ip - неуникальные");
         return StatMapper.mapToStatResponseViewDto(statRepository
                 .findAllByRequestedBetweenAndUriInOrderByRequestedDesc(startTime, endTime, uris));
+    }
+
+    @Override
+    public long getUniqueEventViews(long eventId) {
+        log.debug("getUniqueEventViews - service.eventId({})", eventId);
+        String eventUri = String.format("/events/%d", eventId);
+        return statRepository.getUniqueEventViewsByUri(eventUri).orElse(0L);
     }
 }

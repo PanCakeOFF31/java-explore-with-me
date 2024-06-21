@@ -16,6 +16,6 @@ public class App {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "app", nullable = false)
+    @Column(name = "app", nullable = false, unique = true)
     private String app;
 }

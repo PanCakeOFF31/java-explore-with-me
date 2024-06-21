@@ -30,7 +30,7 @@ public class StatsController {
     @ResponseStatus(HttpStatus.OK)
     public List<StatResponseDto> getStats(@RequestParam String start,
                                           @RequestParam String end,
-                                          @RequestParam(required = false, defaultValue = "") String[] uris,
+                                          @RequestParam(required = false) String[] uris,
                                           @RequestParam(required = false, defaultValue = "false") boolean unique) {
         log.debug("/stats - GET: getStats({}, {}, {}, {})", start, end, uris, unique);
 
@@ -38,5 +38,13 @@ public class StatsController {
         end = URLDecoder.decode(end, StandardCharsets.UTF_8);
 
         return statsService.getStats(start, end, uris, unique);
+    }
+
+
+    @GetMapping(path = "/stats/{eventId}")
+    @ResponseStatus(HttpStatus.OK)
+    public long getUniqueEventViews(@PathVariable long eventId) {
+        log.debug("/stats/{} - GET: getUniqueEventViews({})", eventId, eventId);
+        return statsService.getUniqueEventViews(eventId);
     }
 }

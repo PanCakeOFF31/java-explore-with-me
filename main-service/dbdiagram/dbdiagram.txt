@@ -1,0 +1,64 @@
+Table person {
+  id bigint [primary key]
+  name varchar(2, 250) [not null]
+  email varchar(6, 254) [not null, unique]
+}
+
+Table category {
+  id bigint [primary key]
+  name varchar(1, 50) [not null, unique]
+}
+
+Table location {
+  id bigint [primary key]
+  latitude float4 [not null, note: 'lat']
+  longitude float4 [not null, note: 'lon']
+  indexes {
+    (latitude, longitude) [unique]
+  }
+}
+
+Table event {
+  id bigint [primary key]
+  category_id bigint [ref: > category.id, note: 'category', not null]
+  initiator_id bigint [ref: > person.id, note: 'initiator', not null]
+  location_id bigint [ref: > location.id, note: 'location', not null]
+  title varchar(3,120) [not null]
+  annotation varchar(20, 2000) [not null]
+  description varchar(20, 7000) [not null]
+  created_on timestamp [not null]
+  event_date timestamp [not null]
+  published_on timestamp [null]
+  paid bool [default: false, null]
+  participant_limit int [default: 0, null]
+  confirmed_requests int [default: 0, null]
+  request_moderation bool [default: true, null]
+  state enum [not null, note: 'PENDING, PUBLISHED, CANCELED', default: 'PENDING']
+  views bigint [default: 0, null]
+}
+
+Table compilation {
+  id bigint [primary key]
+  title varchar(1,50) [not null, unique]
+  pinned bool [default: false, null]
+}
+
+Table event_compilation {
+  id bigint [primary key]
+  event_id bigint [ref: < event.id, not null]
+  compilation_id bigint [ref: < compilation.id, not null]
+    indexes {
+    (event_id, compilation_id) [unique]
+    }
+}
+
+Table request {
+  id bigint [primary key]
+  event_id bigint [ref: > event.id, not null]
+  requester_id bigint [ref: > person.id, not null]
+  created_on timestamp [not null]
+  status enum [not null, note: 'PENDING, CONFIRMED, REJECTED']
+    indexes {
+    (event_id, requester_id) [unique]
+  }
+}

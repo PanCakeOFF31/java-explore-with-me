@@ -13,4 +13,6 @@ public interface StatsService {
                                    String end,
                                    String[] uris,
                                    boolean unique);
+
+    long getUniqueEventViews(long eventId);
 }
