@@ -85,7 +85,7 @@ public class StatClientImpl implements StatClient {
         System.out.println(responseBody);
 
         try {
-            return Long.valueOf(responseBody.toString());
+            return Long.parseLong(responseBody.toString());
         } catch (RuntimeException ignore) {
             log.warn("Проблемы с возвращаемым телом от StatsService");
             return 0;
