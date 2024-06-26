@@ -45,7 +45,7 @@ public class CommonComponentImpl implements CommonComponent {
     private final CompilationRepository compilationRepository;
     private final ParticipationRequestRepository participationRequestRepository;
 
-    public final static DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final String USER_NOT_FOUND = "User with id=%d was not found";
     private static final String CATEGORY_NOT_FOUND = "Category with id=%d was not found";
