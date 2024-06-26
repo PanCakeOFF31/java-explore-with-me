@@ -23,7 +23,7 @@ services:
 
   ewm-stats-service:
     build: ./stats-service/http-service/
-    image: ewm-stats-service:v2.0.2
+    image: ewm-stats-service:v2.0.4
     container_name: ewm-stats-service
     ports:
       - "9090:9090"
@@ -43,7 +43,7 @@ services:
 
   ewm-main-service:
     build: ./main-service/
-    image: ewm-main-service:v2.0.3
+    image: ewm-main-service:v2.0.5
     ports:
       - "8080:8080"
       - "8081:8081"

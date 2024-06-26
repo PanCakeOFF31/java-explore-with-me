@@ -30,7 +30,8 @@ class StatClientTestTest {
     private static final String POSTMAN_MOCK_SERVER_URL = "https://6e83aceb-7baf-4757-a0f1-d9510f26e822.mock.pstmn.io";
     @Value("${stats-server.url}")
     private String realUrl;
-    private String mockServerUrl = "http://localhost:9090";
+    @Value("${stats-server.url}")
+    private String mockServerUrl;
     private StatClientImpl statClient;
     @Autowired
     private RestTemplateBuilder builder;
