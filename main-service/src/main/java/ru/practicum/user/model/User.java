@@ -30,7 +30,6 @@ public class User {
     @Column(length = 250, nullable = false)
     private String name;
 
-    @Email
     @Column(length = 254, nullable = false, unique = true)
     private String email;
 }
