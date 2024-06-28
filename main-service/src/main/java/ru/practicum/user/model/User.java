@@ -3,7 +3,6 @@ package ru.practicum.user.model;
 import lombok.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
 
 /**
  * Dto-классы - {@link ru.practicum.user.dto}
