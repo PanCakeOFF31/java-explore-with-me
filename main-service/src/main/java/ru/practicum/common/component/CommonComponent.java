@@ -9,10 +9,16 @@ import ru.practicum.compilation.exception.CompilationNotFoundException;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.event.exception.EventNotFoundException;
 import ru.practicum.event.model.Event;
+import ru.practicum.like.exception.LikeNotFoundException;
+import ru.practicum.like.model.Like;
+import ru.practicum.like.model.LikeId;
 import ru.practicum.location.exception.LocationNotFoundException;
 import ru.practicum.location.model.Location;
 import ru.practicum.partrequest.exception.ParticipationRequestNotFoundException;
 import ru.practicum.partrequest.model.ParticipationRequest;
+import ru.practicum.rating.exception.RatingNotFoundException;
+import ru.practicum.rating.model.Rating;
+import ru.practicum.rating.model.RatingId;
 import ru.practicum.user.exception.UserNotFoundException;
 import ru.practicum.user.model.User;
 
@@ -52,7 +58,11 @@ public interface CommonComponent {
     // Event
     boolean containsEventById(long eventId);
 
+    boolean containsPublishedEventById(long eventId);
+
     void eventExists(long eventId) throws EventNotFoundException;
+
+    void publishedEventExists(long eventId) throws EventNotFoundException;
 
     Event getEventById(long eventId) throws EventNotFoundException;
 
@@ -72,10 +82,39 @@ public interface CommonComponent {
 
     ParticipationRequest getParticipationRequestById(long partrequestId) throws ParticipationRequestNotFoundException;
 
+    // Like
+    boolean containsLikeById(LikeId likeId);
+
+    boolean containsLikeById(long userId, long eventId);
+
+    void likeExists(LikeId likeId) throws LikeNotFoundException;
+
+    void likeExists(long userId, long eventId) throws LikeNotFoundException;
+
+    Like getLikeById(LikeId likeId) throws LikeNotFoundException;
+
+    Like getLikeById(long userId, long eventId) throws LikeNotFoundException;
+
+    // Rating
+    boolean containsRatingById(RatingId ratingId);
+
+    boolean containsRatingById(long userId, long eventId);
+
+    void ratingExists(RatingId ratingId) throws RatingNotFoundException;
+
+    void ratingExists(long userId, long eventId) throws RatingNotFoundException;
+
+    Rating getRatingById(RatingId ratingId) throws RatingNotFoundException;
+
+    Rating getRatingById(long userId, long eventId) throws RatingNotFoundException;
+
+    // Rating
+
     // Pageable
     Pageable definePageable(int from, int size);
 
     Pageable definePageable(int from, int size, Sort sort);
 
+    // DateTime validation
     void dateTimeRangeValidation(LocalDateTime timePoint1, LocalDateTime timePoint2) throws InvalidDateTimeRangeException;
 }

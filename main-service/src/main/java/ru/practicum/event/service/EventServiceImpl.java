@@ -36,20 +36,18 @@ public class EventServiceImpl implements EventService {
     private final CommonComponent commonComponent;
     private final EventRepository eventRepository;
 
-    private static final String PUBLISHED_EVENTS_NOT_FOUND = "Published events with ids=%s was not found";
+    private static final String PUBLISHED_EVENTS_NOT_FOUND = "Published events with ids=%s was not found.";
 
-    private static final String EVENT_WITH_INITIATOR_NOT_FOUND = "Event with id=%d and initiator id=%d was not found";
-    private static final String PUBLISHED_EVENT_WITH_INITIATOR_NOT_FOUND = "Published event with id=%d and initiator id=%d was not found";
-    private static final String INVALID_ADMIN_UPDATE_EVENT_DATE = "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации";
-    private static final String INVALID_PRIVATE_CREATE_EVENT_DATE = "Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: %s";
-    private static final String INVALID_PRIVATE_UPDATE_EVENT_DATE = "Дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента";
-
-    private static final String NOT_PUBLISHED_EVENT_STATE = "Cannot publish the event because it's not in the right state: PUBLISHED";
-    private static final String NOT_PENDING_EVENT_STATE = "Cannot publish the event because it's not in the right state: PENDING";
-
-    private static final String NOT_PENDING_OR_CANCELED_EVENT_STATE = "Only pending or canceled events can be changed";
-
-    private static final String INVALID_UPDATE_PARTICIPANT_LIMIT = "Новый лимит меньше чем количество уже подтвержденных запросов";
+    private static final String EVENT_WITH_INITIATOR_NOT_FOUND = "Event with id=%d and initiator id=%d was not found.";
+    private static final String PUBLISHED_EVENT_WITH_INITIATOR_NOT_FOUND = "Published event with id=%d and initiator id=%d was not found.";
+    private static final String INVALID_ADMIN_UPDATE_EVENT_DATE = "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации.";
+    private static final String INVALID_PRIVATE_CREATE_EVENT_DATE = "Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: %s.";
+    private static final String INVALID_PRIVATE_UPDATE_EVENT_DATE = "Дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента.";
+    private static final String NOT_UPDATE_EVENT_DATE = "Нельзя обновлять событие которое уже началось или прошло.";
+    private static final String NOT_PUBLISHED_EVENT_STATE = "Cannot publish the event because it's not in the right state: PUBLISHED.";
+    private static final String NOT_PENDING_EVENT_STATE = "Cannot publish the event because it's not in the right state: PENDING.";
+    private static final String NOT_PENDING_OR_CANCELED_EVENT_STATE = "Only pending or canceled events can be changed.";
+    private static final String INVALID_UPDATE_PARTICIPANT_LIMIT = "Новый лимит меньше чем количество уже подтвержденных запросов.";
 
     @Override
     @Transactional
@@ -82,6 +80,9 @@ public class EventServiceImpl implements EventService {
         eventToCreate.setState(EventState.PENDING);
         eventToCreate.setConfirmedRequests(0);
         eventToCreate.setViews(0L);
+        eventToCreate.setLikes(0L);
+        eventToCreate.setDislikes(0L);
+        eventToCreate.setRating(0F);
 
         return eventToCreate;
     }
@@ -167,6 +168,11 @@ public class EventServiceImpl implements EventService {
         log.debug("EventServiceImpl - service.toUpdatePrivateValidation({}, {}, {})", currentEvent, updateEvent, userStateAction);
 
         if (updateEvent.getEventDate() != null) {
+            // Нельзя обновлять событие, которое началось или прошло
+            eventDateValidation(LocalDateTime.now(),
+                    currentEvent.getEventDate(),
+                    NOT_UPDATE_EVENT_DATE);
+
             eventDateValidation(LocalDateTime.now().plusHours(2),
                     updateEvent.getEventDate(),
                     INVALID_PRIVATE_UPDATE_EVENT_DATE);
@@ -323,9 +329,9 @@ public class EventServiceImpl implements EventService {
 
         BooleanExpression predicate = QEvent.event.state.eq(EventState.PUBLISHED);
 
-        if (text != null && text.isBlank())
-            predicate = predicate.and(QEvent.event.annotation.containsIgnoreCase(text))
-                    .and(QEvent.event.description.containsIgnoreCase(text));
+        if (text != null && !text.isBlank())
+            predicate = predicate.and((QEvent.event.annotation.containsIgnoreCase(text))
+                    .or(QEvent.event.description.containsIgnoreCase(text)));
 
         if (categories != null)
             predicate = predicate.and(QEvent.event.category.id.in(categories));
@@ -354,17 +360,28 @@ public class EventServiceImpl implements EventService {
     private Pageable formulatePublicEventsPageable(int from, int size, EventSort sort) {
         log.debug("EventServiceImpl - service.formulatePublicEventsPageable({}, {}, {})", from, size, sort);
 
-        if (sort == EventSort.EVENT_DATE)
-            return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("eventDate")));
+        if (sort == null)
+            return commonComponent.definePageable(from, size, Sort.by(Sort.Order.asc("id")));
 
-        if (sort == EventSort.VIEWS)
-            return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("views")));
-
-        return commonComponent.definePageable(from, size, Sort.by(Sort.Order.asc("id")));
+        switch (sort) {
+            case EVENT_DATE:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("eventDate")));
+            case VIEWS:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("views")));
+            case LIKES_DESC:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("likes")));
+            case DISLIKES_DESC:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("dislikes")));
+            case RATING_DESC:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.desc("rating")));
+            default:
+                return commonComponent.definePageable(from, size, Sort.by(Sort.Order.asc("id")));
+        }
     }
 
     @Override
-    public EventFullDto fetchPublicEventById(long eventId, HttpServletRequest servletRequest) throws EventNotFoundException {
+    public EventFullDto fetchPublicEventById(long eventId, HttpServletRequest servletRequest) throws
+            EventNotFoundException {
         log.debug("EventServiceImpl - service.fetchEventById({})", eventId);
         Event publishedEvent = commonComponent.getPublishedEventById(eventId);
         return EventMapper.mapToEventFullDto(publishedEvent);
@@ -414,6 +431,11 @@ public class EventServiceImpl implements EventService {
                 updateEvent, adminStateAction);
 
         if (updateEvent.getEventDate() != null) {
+            // Нельзя обновлять событие, которое началось или прошло
+            eventDateValidation(LocalDateTime.now(),
+                    currentEvent.getEventDate(),
+                    NOT_UPDATE_EVENT_DATE);
+
             eventDateValidation(LocalDateTime.now().plusHours(1),
                     updateEvent.getEventDate(),
                     INVALID_ADMIN_UPDATE_EVENT_DATE);
@@ -435,7 +457,8 @@ public class EventServiceImpl implements EventService {
             commonComponent.throwAndLog(() -> new InvalidParticipantLimitException(INVALID_UPDATE_PARTICIPANT_LIMIT));
     }
 
-    private Event prepareAdminEventToUpdate(Event currentEvent, Event updateEvent, UpdateEventAdminRequest updateRequest) {
+    private Event prepareAdminEventToUpdate(Event currentEvent, Event updateEvent, UpdateEventAdminRequest
+            updateRequest) {
         log.debug("EventServiceImpl - service.prepareAdminEventToSave({}, {}, {})", currentEvent, updateEvent, updateRequest);
 
         Event eventToUpdate = currentEvent.toBuilder().build();
@@ -484,7 +507,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event getPublishedEventByIdAndInitiatorId(long eventId, long initiatorId) throws PublishedEventWithInitiatorNotFoundException {
+    public Event getPublishedEventByIdAndInitiatorId(long eventId, long initiatorId) throws
+            PublishedEventWithInitiatorNotFoundException {
         log.debug("CommonComponentImpl - component.getPublishedEventByIdAndInitiatorId(eventId={}, initiatorId={})", eventId, initiatorId);
 
         commonComponent.userExists(initiatorId);
@@ -529,6 +553,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public void incrementConfirmedRequestsValue(long eventId) {
+        log.debug("EventServiceImpl - service.incrementConfirmedRequestsValue(eventId={})", eventId);
+        eventRepository.incrementEventConfirmedRequestsValue(eventId);
+    }
+
+    @Override
     @Transactional
     public void decrementConfirmedRequestsValue(long eventId) {
         log.debug("EventServiceImpl - service.decrementConfirmedRequestsValue(eventId={})", eventId);
@@ -536,8 +566,32 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void incrementConfirmedRequestsValue(long eventId) {
-        log.debug("EventServiceImpl - service.incrementConfirmedRequestsValue(eventId={})", eventId);
-        eventRepository.incrementEventConfirmedRequestsValue(eventId);
+    public void incrementEventLikesValue(long eventId) {
+        log.debug("EventServiceImpl - service.incrementEventLikesValue(eventId={})", eventId);
+        eventRepository.incrementEventLikesValue(eventId);
+    }
+
+    @Override
+    public void decrementEventLikesValue(long eventId) {
+        log.debug("EventServiceImpl - service.decrementEventLikesValue(eventId={})", eventId);
+        eventRepository.decrementEventLikesValue(eventId);
+    }
+
+    @Override
+    public void incrementEventDislikesValue(long eventId) {
+        log.debug("EventServiceImpl - service.incrementEventDislikesValue(eventId={})", eventId);
+        eventRepository.incrementEventDislikesValue(eventId);
+    }
+
+    @Override
+    public void decrementEventDislikesValue(long eventId) {
+        log.debug("EventServiceImpl - service.decrementEventDislikesValue(eventId={})", eventId);
+        eventRepository.decrementEventDislikesValue(eventId);
+    }
+
+    @Override
+    public void updateEventRatingValue(long eventId, float rating) {
+        log.debug("EventServiceImpl - service.updateEventRatingValue(eventId={}, {})", eventId, rating);
+        eventRepository.updateEventRatingValue(eventId, rating);
     }
 }

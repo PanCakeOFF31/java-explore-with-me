@@ -7,6 +7,7 @@ import ru.practicum.partrequest.exception.ParticipationLimitException;
 import ru.practicum.partrequest.exception.RequesterIsEventInitiatorException;
 import ru.practicum.partrequest.exception.SameRequestExistsException;
 import ru.practicum.partrequest.model.ParticipationRequest;
+import ru.practicum.partrequest.model.RequestStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +26,6 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     List<ParticipationRequest> findAllByRequesterId(long requesterId);
 
     List<ParticipationRequest> findAllByEventIdAndIdIn(long eventId, Set<Long> ids);
+
+    Optional<ParticipationRequest> findByRequesterIdAndEventIdAndStatus(long userId, long eventId, RequestStatus status);
 }

@@ -60,8 +60,18 @@ public interface EventService {
 
     void updateEventConfirmedRequestsValue(long eventId, int confirmedRequests);
 
+    void incrementConfirmedRequestsValue(long eventId);
+
     void decrementConfirmedRequestsValue(long eventId);
 
-    void incrementConfirmedRequestsValue(long eventId);
+    void incrementEventLikesValue(long eventId);
+
+    void decrementEventLikesValue(long eventId);
+
+    void incrementEventDislikesValue(long eventId);
+
+    void decrementEventDislikesValue(long eventId);
+
+    void updateEventRatingValue(long eventId, float rating);
 }
 

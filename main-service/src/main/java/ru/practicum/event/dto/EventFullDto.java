@@ -33,4 +33,7 @@ public class EventFullDto {
     private EventState state;
     private long views;
     private int confirmedRequests;
+    private long likes;
+    private long dislikes;
+    private float rating;
 }

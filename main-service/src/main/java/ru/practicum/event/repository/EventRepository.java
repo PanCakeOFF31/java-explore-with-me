@@ -19,6 +19,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     Optional<Event> findByIdAndInitiatorIdAndState(long itemId, long initiatorId, EventState eventState);
 
+    boolean existsByIdAndState(long eventId, EventState state);
+
     Optional<Event> findByIdAndState(long eventId, EventState state);
 
     @Modifying
@@ -26,10 +28,30 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     void updateEventConfirmedRequestsValue(long eventId, int confirmedRequests);
 
     @Modifying
+    @Query("update Event as e set e.confirmedRequests = e.confirmedRequests + 1 where e.id = ?1")
+    void incrementEventConfirmedRequestsValue(long eventId);
+
+    @Modifying
     @Query("update Event as e set e.confirmedRequests = e.confirmedRequests - 1 where e.id = ?1")
     void decrementEventConfirmedRequestsValue(long eventId);
 
     @Modifying
-    @Query("update Event as e set e.confirmedRequests = e.confirmedRequests + 1 where e.id = ?1")
-    void incrementEventConfirmedRequestsValue(long eventId);
+    @Query("update Event as e set e.likes = e.likes + 1 where e.id = ?1")
+    void incrementEventLikesValue(long eventId);
+
+    @Modifying
+    @Query("update Event as e set e.likes = e.likes - 1 where e.id = ?1")
+    void decrementEventLikesValue(long eventId);
+
+    @Modifying
+    @Query("update Event as e set e.dislikes = e.dislikes + 1 where e.id = ?1")
+    void incrementEventDislikesValue(long eventId);
+
+    @Modifying
+    @Query("update Event as e set e.dislikes = e.dislikes - 1 where e.id = ?1")
+    void decrementEventDislikesValue(long eventId);
+
+    @Modifying
+    @Query("update Event as e set e.rating = ?2 where e.id = ?1")
+    void updateEventRatingValue(long eventId, float rating);
 }

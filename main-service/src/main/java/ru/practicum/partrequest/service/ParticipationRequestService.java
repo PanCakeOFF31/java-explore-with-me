@@ -23,4 +23,6 @@ public interface ParticipationRequestService {
 
     EventRequestStatusUpdateResult modifyPrivateParticRequests(long userId, long eventId, EventRequestStatusUpdateRequest updateRequest) throws
             WrongRequestStatusException;
+
+    void userIsConfirmedEventParticipant(long userId, long eventId) throws ConfirmedEventParticipantNotFoundException;
 }

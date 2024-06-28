@@ -73,6 +73,15 @@ public class Event {
     @Column
     private Long views;
 
+    @Column
+    private Long likes;
+
+    @Column
+    private Long dislikes;
+
+    @Column
+    private Float rating;
+
     @JoinColumn(name = "initiator_id")
     @ManyToOne(fetch = FetchType.EAGER, targetEntity = User.class)
     private User initiator;

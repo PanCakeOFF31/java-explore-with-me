@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.StatClient;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.model.EventSort;
@@ -24,7 +23,6 @@ import java.util.List;
 @RequestMapping(path = "/events")
 public class PublicEventController {
     private final EventService eventService;
-    private final StatClient statsHttpClient;
 
     /**
      * <h5>Получение событий с возможностью фильтрации</h5>
