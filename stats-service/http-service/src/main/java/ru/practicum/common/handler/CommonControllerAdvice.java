@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.common.error.ErrorResponse;
-import ru.practicum.exception.InvalidDurationException;
-import ru.practicum.exception.MethodNotImplemented;
+import ru.practicum.common.exception.InvalidDurationException;
+import ru.practicum.common.exception.MethodNotImplemented;
 
 import java.time.format.DateTimeParseException;
 

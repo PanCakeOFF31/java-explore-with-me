@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StatMapper {
+    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public static Stat mapToStat(StatRequestDto statHitRequestDto) {
         return Stat.builder()
                 .uri(statHitRequestDto.getUri())
@@ -48,6 +50,4 @@ public class StatMapper {
 
         return dtos;
     }
-
-    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 }

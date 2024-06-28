@@ -1,0 +1,14 @@
+DELETE FROM person;
+DELETE FROM category;
+DELETE FROM location;
+DELETE FROM event;
+DELETE FROM compilation;
+DELETE FROM event_compilation;
+DELETE FROM request;
+ALTER TABLE person ALTER id RESTART;
+ALTER TABLE category ALTER id RESTART;
+ALTER TABLE location ALTER id RESTART;
+ALTER TABLE event ALTER id RESTART;
+ALTER TABLE compilation ALTER id RESTART;
+ALTER TABLE event_compilation ALTER id RESTART;
+ALTER TABLE request ALTER id RESTART;

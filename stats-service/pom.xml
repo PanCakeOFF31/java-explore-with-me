@@ -16,6 +16,7 @@
     <modules>
         <module>http-service</module>
         <module>http-client</module>
+        <module>http-client-test</module>
         <module>stats-common</module>
         <module>stats-common-test</module>
     </modules>
