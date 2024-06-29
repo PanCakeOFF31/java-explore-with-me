@@ -20,6 +20,30 @@ import static ru.practicum.common.handler.ApiConstants.*;
 public class ApiPartRequestControllerAdvice {
     private final String className = this.getClass().getName();
 
+    @ExceptionHandler(ConfirmedEventParticipantNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleConfirmedEventParticipantNotFoundException(ConfirmedEventParticipantNotFoundException exception) {
+        log.debug("{} - ConfirmedEventParticipantNotFoundException", className);
+        return ApiError.builder()
+                .status(NOT_FOUND_STATUS)
+                .reason(NOT_FOUND_REASON)
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(InvalidRequestDateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleInvalidRequestDateException(InvalidRequestDateException exception) {
+        log.debug("{} - handleInvalidRequestDateException", className);
+        return ApiError.builder()
+                .status(BAD_REQUEST_STATUS)
+                .reason(BAD_REQUEST_REASON)
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     @ExceptionHandler(ParticipationLimitException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleParticipationLimitException(ParticipationLimitException exception) {
@@ -31,6 +55,7 @@ public class ApiPartRequestControllerAdvice {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
 
     @ExceptionHandler(ParticipationRequestNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

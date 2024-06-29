@@ -140,13 +140,38 @@ public class EventServiceStatsImpl implements EventService {
     }
 
     @Override
+    public void incrementConfirmedRequestsValue(long eventId) {
+        eventService.incrementConfirmedRequestsValue(eventId);
+    }
+
+    @Override
     public void decrementConfirmedRequestsValue(long eventId) {
         eventService.decrementConfirmedRequestsValue(eventId);
     }
 
     @Override
-    public void incrementConfirmedRequestsValue(long eventId) {
-        eventService.incrementConfirmedRequestsValue(eventId);
+    public void incrementEventLikesValue(long eventId) {
+        eventService.incrementEventLikesValue(eventId);
+    }
+
+    @Override
+    public void decrementEventLikesValue(long eventId) {
+        eventService.decrementEventLikesValue(eventId);
+    }
+
+    @Override
+    public void incrementEventDislikesValue(long eventId) {
+        eventService.incrementEventDislikesValue(eventId);
+    }
+
+    @Override
+    public void decrementEventDislikesValue(long eventId) {
+        eventService.decrementEventDislikesValue(eventId);
+    }
+
+    @Override
+    public void updateEventRatingValue(long eventId, float rating) {
+        eventService.updateEventRatingValue(eventId, rating);
     }
 
     private void performHit(HttpServletRequest servletRequest) {

@@ -17,12 +17,20 @@ import ru.practicum.event.exception.EventNotFoundException;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.like.exception.LikeNotFoundException;
+import ru.practicum.like.model.Like;
+import ru.practicum.like.model.LikeId;
+import ru.practicum.like.repository.LikeRepository;
 import ru.practicum.location.exception.LocationNotFoundException;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.partrequest.exception.ParticipationRequestNotFoundException;
 import ru.practicum.partrequest.model.ParticipationRequest;
 import ru.practicum.partrequest.repository.ParticipationRequestRepository;
+import ru.practicum.rating.exception.RatingNotFoundException;
+import ru.practicum.rating.model.Rating;
+import ru.practicum.rating.model.RatingId;
+import ru.practicum.rating.repository.RatingRepository;
 import ru.practicum.user.exception.UserNotFoundException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
@@ -44,17 +52,21 @@ public class CommonComponentImpl implements CommonComponent {
     private final EventRepository eventRepository;
     private final CompilationRepository compilationRepository;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final LikeRepository likeRepository;
+    private final RatingRepository ratingRepository;
 
     public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private static final String USER_NOT_FOUND = "User with id=%d was not found";
-    private static final String CATEGORY_NOT_FOUND = "Category with id=%d was not found";
-    private static final String LOCATION_NOT_FOUND = "Location with latitude=%f and longitude=%f was not found";
-    private static final String EVENT_NOT_FOUND = "Event with id=%d was not found";
-    private static final String PUBLISHED_EVENT_NOT_FOUND = "Published event with id=%d was not found";
-    private static final String COMPILATION_NOT_FOUND = "Compilation with id=%d was not found";
-    private static final String PARTICIPATION_REQUEST_NOT_FOUND = "Request with id=%d was not found";
-    private static final String INVALID_DATE_TIME_RANGE = "DateTime range problems. %s must be after %s";
+    private static final String USER_NOT_FOUND = "User with id=%d was not found.";
+    private static final String CATEGORY_NOT_FOUND = "Category with id=%d was not found.";
+    private static final String LOCATION_NOT_FOUND = "Location with latitude=%f and longitude=%f was not found.";
+    private static final String EVENT_NOT_FOUND = "Event with id=%d was not found.";
+    private static final String PUBLISHED_EVENT_NOT_FOUND = "Published event with id=%d was not found.";
+    private static final String COMPILATION_NOT_FOUND = "Compilation with id=%d was not found.";
+    private static final String PARTICIPATION_REQUEST_NOT_FOUND = "Request with id=%d was not found.";
+    private static final String LIKE_NOT_FOUND = "LIKE with id=(%d, %d) was not found.";
+    private static final String RATING_NOT_FOUND = "Rating with User.id=%d and Event.id=%d was not found.";
+    private static final String INVALID_DATE_TIME_RANGE = "DateTime range problems. %s must be after %s.";
 
     public static String formatDateTime(LocalDateTime ldt) {
         log.debug("CommonComponentImpl - component.formatDateTime({})", ldt);
@@ -163,10 +175,24 @@ public class CommonComponentImpl implements CommonComponent {
     }
 
     @Override
+    public boolean containsPublishedEventById(long eventId) {
+        log.debug("CommonComponentImpl - component.containsPublishedEventById({})", eventId);
+        return eventRepository.existsByIdAndState(eventId, EventState.PUBLISHED);
+    }
+
+    @Override
     public void eventExists(long eventId) throws EventNotFoundException {
         log.debug("CommonComponentImpl - component.eventExists({})", eventId);
         if (!containsEventById(eventId)) {
             throwAndLog(() -> new EventNotFoundException(prepareMessage(EVENT_NOT_FOUND, eventId)));
+        }
+    }
+
+    @Override
+    public void publishedEventExists(long eventId) throws EventNotFoundException {
+        log.debug("CommonComponentImpl - component.publishedEventExists({})", eventId);
+        if (!containsPublishedEventById(eventId)) {
+            throwAndLog(() -> new EventNotFoundException(prepareMessage(PUBLISHED_EVENT_NOT_FOUND, eventId)));
         }
     }
 
@@ -239,6 +265,92 @@ public class CommonComponentImpl implements CommonComponent {
                     String message = prepareMessage(PARTICIPATION_REQUEST_NOT_FOUND, partrequestId);
                     log.info(message);
                     return new ParticipationRequestNotFoundException(message);
+                });
+    }
+
+    @Override
+    public boolean containsLikeById(LikeId likeId) {
+        log.debug("CommonComponentImpl - component.containsLikeById({})", likeId);
+        return likeRepository.existsById(likeId);
+    }
+
+    @Override
+    public boolean containsLikeById(long userId, long eventId) {
+        log.debug("CommonComponentImpl - component.containsLikeById({}, {})", userId, eventId);
+        return containsLikeById(LikeId.of(userId, eventId));
+    }
+
+    @Override
+    public void likeExists(LikeId likeId) throws LikeNotFoundException {
+        log.debug("CommonComponentImpl - component.likeExists({})", likeId);
+        likeExists(likeId.getUserId(), likeId.getEventId());
+    }
+
+    @Override
+    public void likeExists(long userId, long eventId) throws LikeNotFoundException {
+        log.debug("CommonComponentImpl - component.likeExists({}, {})", userId, eventId);
+        if (!containsLikeById(LikeId.of(userId, eventId))) {
+            throwAndLog(() -> new LikeNotFoundException(prepareMessage(LIKE_NOT_FOUND, userId, eventId)));
+        }
+    }
+
+    @Override
+    public Like getLikeById(LikeId likeId) throws LikeNotFoundException {
+        log.debug("CommonComponentImpl - component.getLikeById({})", likeId);
+        return getLikeById(likeId.getUserId(), likeId.getEventId());
+    }
+
+    @Override
+    public Like getLikeById(long userId, long eventId) throws LikeNotFoundException {
+        log.debug("CommonComponentImpl - component.getLikeById({}, {})", userId, eventId);
+        return likeRepository.findById(LikeId.of(userId, eventId))
+                .orElseThrow(() -> {
+                    String message = prepareMessage(LIKE_NOT_FOUND, userId, eventId);
+                    log.info(message);
+                    return new LikeNotFoundException(message);
+                });
+    }
+
+    @Override
+    public boolean containsRatingById(RatingId ratingId) {
+        log.debug("CommonComponentImpl - component.containsRatingById({})", ratingId);
+        return ratingRepository.existsById(ratingId);
+    }
+
+    @Override
+    public boolean containsRatingById(long userId, long ratingId) {
+        log.debug("CommonComponentImpl - component.containsRatingById({}, {})", userId, ratingId);
+        return containsRatingById(RatingId.of(userId, ratingId));
+    }
+
+    @Override
+    public void ratingExists(RatingId ratingId) throws RatingNotFoundException {
+        log.debug("CommonComponentImpl - component.ratingExists({})", ratingId);
+        ratingExists(ratingId.getUserId(), ratingId.getEventId());
+    }
+
+    @Override
+    public void ratingExists(long userId, long eventId) throws RatingNotFoundException {
+        log.debug("CommonComponentImpl - component.ratingExists({}, {})", userId, eventId);
+        if (!containsRatingById(RatingId.of(userId, eventId))) {
+            throwAndLog(() -> new RatingNotFoundException(prepareMessage(RATING_NOT_FOUND, userId, eventId)));
+        }
+    }
+
+    @Override
+    public Rating getRatingById(RatingId ratingId) throws RatingNotFoundException {
+        log.debug("CommonComponentImpl - component.getRatingById({})", ratingId);
+        return getRatingById(ratingId.getUserId(), ratingId.getEventId());
+    }
+
+    @Override
+    public Rating getRatingById(long userId, long eventId) throws RatingNotFoundException {
+        log.debug("CommonComponentImpl - component.getRatingById({}, {})", userId, eventId);
+        return ratingRepository.findById(RatingId.of(userId, eventId))
+                .orElseThrow(() -> {
+                    String message = prepareMessage(RATING_NOT_FOUND, userId, eventId);
+                    log.info(message);
+                    return new RatingNotFoundException(message);
                 });
     }
 

@@ -41,6 +41,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private static final String NOT_PUBLISHED_EVENT = "Not published event.";
     private static final String NOT_PENDING_REQUEST_STATE = "It's not in the right state: PENDING";
     private static final String IS_REJECTED_REQUEST_STATE = "It's not in the right state: NO REJECTED";
+    private static final String NOT_CREATE_REQUEST_DATE = "Нельзя создать запрос на участие в событии, которое началось или прошло";
+    private static final String NOT_CANCEL_REQUEST_DATE = "Нельзя отменить/редактировать участие в событии, которое началось или прошло";
+    private static final String NOT_UPDATE_REQUEST_DATE = "Нельзя редактировать участие в событии, которое началось или прошло";
+    private static final String NO_REQUEST = "Нет запроса с пользователем %d для события %d и статусом %s.";
 
     @Override
     @Transactional
@@ -69,6 +73,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         long requesterId = requester.getId();
         int participantLimit = event.getParticipantLimit();
         int confirmedRequests = event.getConfirmedRequests();
+
+        requestDateValidation(LocalDateTime.now(), event.getEventDate(), NOT_CREATE_REQUEST_DATE);
 
         if (eventState != EventState.PUBLISHED)
             commonComponent.throwAndLog(() -> new WrongEventStateException(commonComponent
@@ -125,6 +131,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         ParticipationRequest requestToUpdate = getByIdAndRequesterId(requestId, requesterId);
 
+        requestDateValidation(LocalDateTime.now(), requestToUpdate.getEvent().getEventDate(), NOT_CANCEL_REQUEST_DATE);
+
         if (requestToUpdate.getStatus() == RequestStatus.CONFIRMED) {
             requestToUpdate.setStatus(RequestStatus.CANCELED);
             eventService.decrementConfirmedRequestsValue(requestToUpdate.getEvent().getId());
@@ -133,6 +141,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         requestToUpdate.setStatus(RequestStatus.CANCELED);
         return ParticipationRequestMapper.mapToParticipationRequestDto(requestRepository.saveAndFlush(requestToUpdate));
+    }
+
+    private void requestDateValidation(LocalDateTime timePoint1, LocalDateTime timePoint2, String message) {
+        log.debug("ParticipationRequestServiceImpl - service.requestDateValidation({}, {})", timePoint1, timePoint2);
+
+        if (timePoint2.isBefore(timePoint1))
+            commonComponent.throwAndLog(() -> new InvalidRequestDateException(message));
     }
 
     @Override
@@ -192,6 +207,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         final int participantLimit = event.getParticipantLimit();
         int confirmedRequests = event.getConfirmedRequests();
+
+        requestDateValidation(LocalDateTime.now(), event.getEventDate(), NOT_UPDATE_REQUEST_DATE);
 
         if (updateStatus == UpdateStatus.CONFIRMED) {
 
@@ -255,5 +272,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     log.info(message);
                     return new ParticRequestWithRequesterAndEventNotFoundException(message);
                 });
+    }
+
+    @Override
+    public void userIsConfirmedEventParticipant(long userId, long eventId) throws ConfirmedEventParticipantNotFoundException {
+        log.debug("ParticipationRequestServiceImpl - service.userIsConfirmedEventParticipant(userId={}, eventId={})", userId, eventId);
+
+        Optional<ParticipationRequest> request = requestRepository.findByRequesterIdAndEventIdAndStatus(userId, eventId, RequestStatus.CONFIRMED);
+        if (request.isEmpty())
+            commonComponent.throwAndLog(() -> new ConfirmedEventParticipantNotFoundException(String.format(
+                    NO_REQUEST, userId, eventId, RequestStatus.CONFIRMED)));
     }
 }

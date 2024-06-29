@@ -59,8 +59,11 @@ public class EventMapper {
                 .annotation(event.getAnnotation())
                 .eventDate(DTF.format(event.getEventDate()))
                 .paid(event.getPaid())
-                .views(event.getViews())
                 .confirmedRequests(event.getConfirmedRequests())
+                .views(event.getViews())
+                .likes(event.getLikes())
+                .dislikes(event.getDislikes())
+                .rating(event.getRating())
                 .build();
     }
 
@@ -97,6 +100,9 @@ public class EventMapper {
                 .confirmedRequests(event.getConfirmedRequests())
                 .state(event.getState())
                 .views(event.getViews())
+                .likes(event.getLikes())
+                .dislikes(event.getDislikes())
+                .rating(event.getRating())
                 .build();
     }
 

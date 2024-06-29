@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 
+
 /**
  * Dto-классы - {@link ru.practicum.user.dto}
  * <ul>

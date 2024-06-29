@@ -15,13 +15,22 @@ import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.repository.CompilationRepository;
 import ru.practicum.event.exception.EventNotFoundException;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.like.exception.LikeNotFoundException;
+import ru.practicum.like.model.Like;
+import ru.practicum.like.model.LikeId;
+import ru.practicum.like.repository.LikeRepository;
 import ru.practicum.location.exception.LocationNotFoundException;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.partrequest.exception.ParticipationRequestNotFoundException;
 import ru.practicum.partrequest.model.ParticipationRequest;
 import ru.practicum.partrequest.repository.ParticipationRequestRepository;
+import ru.practicum.rating.exception.RatingNotFoundException;
+import ru.practicum.rating.model.Rating;
+import ru.practicum.rating.model.RatingId;
+import ru.practicum.rating.repository.RatingRepository;
 import ru.practicum.user.exception.UserNotFoundException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
@@ -46,6 +55,10 @@ class CommonComponentImplTest {
     private CompilationRepository compilationRepository;
     @Mock
     private ParticipationRequestRepository participationRequestRepository;
+    @Mock
+    private LikeRepository likeRepository;
+    @Mock
+    private RatingRepository ratingRepository;
 
     private final long userId = 1;
     private final long categoryId = 2;
@@ -55,6 +68,8 @@ class CommonComponentImplTest {
     private final long eventId = 4;
     private final long compilationId = 5;
     private final long partRequestId = 6;
+    private final boolean isLike = true;
+    private final int ratingValue = 9;
 
     private Object[] onlyUserRepo;
     private Object[] onlyCategoryRepo;
@@ -62,13 +77,18 @@ class CommonComponentImplTest {
     private Object[] onlyEventRepo;
     private Object[] onlyCompilationRepo;
     private Object[] onlyParticipationRequestRepo;
+    private Object[] onlyLikeRepo;
+    private Object[] onlyRatingRepo;
 
-    private static final String USER_NOT_FOUND = "User with id=%d was not found";
-    private static final String CATEGORY_NOT_FOUND = "Category with id=%d was not found";
-    private static final String LOCATION_NOT_FOUND = "Location with latitude=%f and longitude=%f was not found";
-    private static final String EVENT_NOT_FOUND = "Event with id=%d was not found";
-    private static final String COMPILATION_NOT_FOUND = "Compilation with id=%d was not found";
-    private static final String PARTICIPATION_REQUEST_NOT_FOUND = "Request with id=%d was not found";
+    private static final String USER_NOT_FOUND = "User with id=%d was not found.";
+    private static final String CATEGORY_NOT_FOUND = "Category with id=%d was not found.";
+    private static final String LOCATION_NOT_FOUND = "Location with latitude=%f and longitude=%f was not found.";
+    private static final String EVENT_NOT_FOUND = "Event with id=%d was not found.";
+    private static final String PUBLISHED_EVENT_NOT_FOUND = "Published event with id=%d was not found.";
+    private static final String COMPILATION_NOT_FOUND = "Compilation with id=%d was not found.";
+    private static final String PARTICIPATION_REQUEST_NOT_FOUND = "Request with id=%d was not found.";
+    private static final String LIKE_NOT_FOUND = "LIKE with id=(%d, %d) was not found.";
+    private static final String RATING_NOT_FOUND = "Rating with User.id=%d and Event.id=%d was not found.";
 
     private User user;
     private Category category;
@@ -76,26 +96,34 @@ class CommonComponentImplTest {
     private Event event;
     private Compilation compilation;
     private ParticipationRequest request;
+    private Like like;
+    private Rating rating;
 
     @BeforeEach
     public void preTestInitialization() {
         onlyUserRepo = new Object[]{categoryRepository, locationRepository,
-                eventRepository, compilationRepository, participationRequestRepository};
+                eventRepository, compilationRepository, participationRequestRepository, likeRepository, ratingRepository};
 
         onlyCategoryRepo = new Object[]{userRepository, locationRepository,
-                eventRepository, compilationRepository, participationRequestRepository};
+                eventRepository, compilationRepository, participationRequestRepository, likeRepository, ratingRepository};
 
         onlyLocationRepo = new Object[]{userRepository, categoryRepository,
-                eventRepository, compilationRepository, participationRequestRepository};
+                eventRepository, compilationRepository, participationRequestRepository, likeRepository, ratingRepository};
 
         onlyEventRepo = new Object[]{userRepository, categoryRepository, locationRepository,
-                compilationRepository, participationRequestRepository};
+                compilationRepository, participationRequestRepository, likeRepository, ratingRepository};
 
         onlyCompilationRepo = new Object[]{userRepository, categoryRepository, locationRepository,
-                eventRepository, participationRequestRepository};
+                eventRepository, participationRequestRepository, likeRepository, ratingRepository};
 
         onlyParticipationRequestRepo = new Object[]{userRepository, categoryRepository, locationRepository,
-                eventRepository, compilationRepository};
+                eventRepository, compilationRepository, likeRepository, ratingRepository};
+
+        onlyLikeRepo = new Object[]{userRepository, categoryRepository, locationRepository,
+                eventRepository, compilationRepository, participationRequestRepository, ratingRepository};
+
+        onlyRatingRepo = new Object[]{userRepository, categoryRepository, locationRepository,
+                eventRepository, compilationRepository, participationRequestRepository, likeRepository};
 
         user = User.builder()
                 .id(userId)
@@ -130,6 +158,18 @@ class CommonComponentImplTest {
                 .id(partRequestId)
                 .requester(user)
                 .event(event)
+                .build();
+
+        like = Like.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .like(isLike)
+                .build();
+
+        rating = Rating.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .rating(ratingValue)
                 .build();
     }
 
@@ -422,6 +462,34 @@ class CommonComponentImplTest {
     }
 
     @Test
+    public void test_T0100_PS01_containsPublishedEventById() {
+        Mockito.when(eventRepository.existsByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(true);
+
+        boolean result = commonComponent.containsPublishedEventById(eventId);
+        assertTrue(result);
+
+        Mockito.verify(eventRepository, Mockito.only()).existsByIdAndState(eventId, EventState.PUBLISHED);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
+    public void test_T0100_NS01_containsPublishedEventById() {
+        Mockito.when(eventRepository.existsByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(false);
+
+        boolean result = commonComponent.containsPublishedEventById(eventId);
+        assertFalse(result);
+
+        Mockito.verify(eventRepository, Mockito.only()).existsByIdAndState(eventId, EventState.PUBLISHED);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
     public void test_T0110_PS01_eventExists_contains() {
         Mockito.when(eventRepository.existsById(eventId))
                 .thenReturn(true);
@@ -443,6 +511,33 @@ class CommonComponentImplTest {
         assertEquals(String.format(EVENT_NOT_FOUND, eventId), exception.getMessage());
 
         Mockito.verify(eventRepository, Mockito.only()).existsById(eventId);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
+    public void test_T0110_PS01_publishedEventExists_contains() {
+        Mockito.when(eventRepository.existsByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> commonComponent.publishedEventExists(eventId));
+
+        Mockito.verify(eventRepository, Mockito.only()).existsByIdAndState(eventId, EventState.PUBLISHED);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
+    public void test_T0110_NS01_publishedEventExists_notContains_throwsEventNotFoundException() {
+        Mockito.when(eventRepository.existsByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(false);
+
+        RuntimeException exception = assertThrows(EventNotFoundException.class, () -> commonComponent.publishedEventExists(eventId));
+        assertEquals(String.format(PUBLISHED_EVENT_NOT_FOUND, eventId), exception.getMessage());
+
+        Mockito.verify(eventRepository, Mockito.only()).existsByIdAndState(eventId, EventState.PUBLISHED);
         Mockito.verifyNoMoreInteractions(eventRepository);
 
         Mockito.verifyNoInteractions(onlyEventRepo);
@@ -475,6 +570,38 @@ class CommonComponentImplTest {
         assertEquals(String.format(EVENT_NOT_FOUND, eventId), exception.getMessage());
 
         Mockito.verify(eventRepository, Mockito.only()).findById(eventId);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
+    public void test_T0120_PS01_getPublishedEventById_contains() {
+        Mockito.when(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(Optional.of(event));
+
+        Event gotEvent = commonComponent.getPublishedEventById(eventId);
+
+        assertNotNull(gotEvent);
+        assertEquals(event.getId(), gotEvent.getId());
+        assertEquals(event.getTitle(), gotEvent.getTitle());
+        assertEquals(event.getAnnotation(), gotEvent.getAnnotation());
+
+        Mockito.verify(eventRepository, Mockito.only()).findByIdAndState(eventId, EventState.PUBLISHED);
+        Mockito.verifyNoMoreInteractions(eventRepository);
+
+        Mockito.verifyNoInteractions(onlyEventRepo);
+    }
+
+    @Test
+    public void test_T0120_NS01_getPublishedEventById_notContains_throwsEventNotFoundException() {
+        Mockito.when(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(EventNotFoundException.class, () -> commonComponent.getPublishedEventById(eventId));
+        assertEquals(String.format(PUBLISHED_EVENT_NOT_FOUND, eventId), exception.getMessage());
+
+        Mockito.verify(eventRepository, Mockito.only()).findByIdAndState(eventId, EventState.PUBLISHED);
         Mockito.verifyNoMoreInteractions(eventRepository);
 
         Mockito.verifyNoInteractions(onlyEventRepo);
@@ -652,5 +779,355 @@ class CommonComponentImplTest {
         Mockito.verifyNoMoreInteractions(participationRequestRepository);
 
         Mockito.verifyNoInteractions(onlyParticipationRequestRepo);
+    }
+
+    @Test
+    public void test_T0190_PS01_containsLikeById_contains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(true);
+
+        boolean result = commonComponent.containsLikeById(userId, eventId);
+        assertTrue(result);
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0190_PS02_containsLikeById_contains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(true);
+
+        boolean result = commonComponent.containsLikeById(LikeId.of(userId, eventId));
+        assertTrue(result);
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0190_NS01_containsLikeById_notContains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(false);
+
+        boolean result = commonComponent.containsLikeById(userId, eventId);
+        assertFalse(result);
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0190_NS02_containsLikeById_notContains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(false);
+
+        boolean result = commonComponent.containsLikeById(LikeId.of(userId, eventId));
+        assertFalse(result);
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0200_PS01_likeExists_contains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> commonComponent.likeExists(userId, eventId));
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0200_PS02_likeExists_contains() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> commonComponent.likeExists(LikeId.of(userId, eventId)));
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0200_NS01_likeExists_notContains_throwsLikeNotFoundException() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(false);
+
+        RuntimeException exception = assertThrows(LikeNotFoundException.class, () -> commonComponent.likeExists(userId, eventId));
+        assertEquals(String.format(LIKE_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0200_NS02_likeExists_notContains_throwsLikeNotFoundException() {
+        Mockito.when(likeRepository.existsById(LikeId.of(userId, eventId)))
+                .thenReturn(false);
+
+        RuntimeException exception = assertThrows(LikeNotFoundException.class, () -> commonComponent.likeExists(LikeId.of(userId, eventId)));
+        assertEquals(String.format(LIKE_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(likeRepository, Mockito.only()).existsById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0210_PS01_getLikeById_contains() {
+        Mockito.when(likeRepository.findById(LikeId.of(userId, eventId)))
+                .thenReturn(Optional.of(like));
+
+        Like gotLike = commonComponent.getLikeById(userId, eventId);
+
+        assertNotNull(gotLike);
+        assertEquals(like.getUserId(), gotLike.getUserId());
+        assertEquals(like.getEventId(), gotLike.getEventId());
+        assertEquals(like.getLike(), gotLike.getLike());
+
+        Mockito.verify(likeRepository, Mockito.only()).findById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+
+    @Test
+    public void test_T0210_PS02_getLikeById_contains() {
+        Mockito.when(likeRepository.findById(LikeId.of(userId, eventId)))
+                .thenReturn(Optional.of(like));
+
+        Like gotLike = commonComponent.getLikeById(LikeId.of(userId, eventId));
+
+        assertNotNull(gotLike);
+        assertEquals(like.getUserId(), gotLike.getUserId());
+        assertEquals(like.getEventId(), gotLike.getEventId());
+        assertEquals(like.getLike(), gotLike.getLike());
+
+        Mockito.verify(likeRepository, Mockito.only()).findById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0210_NS01_getLikeById_notContains_throwsLikeNotFoundException() {
+        Mockito.when(likeRepository.findById(LikeId.of(userId, eventId)))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(LikeNotFoundException.class, () -> commonComponent.getLikeById(userId, eventId));
+        assertEquals(String.format(LIKE_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(likeRepository, Mockito.only()).findById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0210_NS02_getLikeById_notContains_throwsLikeNotFoundException() {
+        Mockito.when(likeRepository.findById(LikeId.of(userId, eventId)))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(LikeNotFoundException.class, () -> commonComponent.getLikeById(LikeId.of(userId, eventId)));
+        assertEquals(String.format(LIKE_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(likeRepository, Mockito.only()).findById(LikeId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(likeRepository);
+
+        Mockito.verifyNoInteractions(onlyLikeRepo);
+    }
+
+    @Test
+    public void test_T0220_PS01_containsRatingById_contains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(true);
+
+        boolean result = commonComponent.containsRatingById(userId, eventId);
+        assertTrue(result);
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0220_PS02_containsRatingById_contains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(true);
+
+        boolean result = commonComponent.containsRatingById(RatingId.of(userId, eventId));
+        assertTrue(result);
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0220_NS01_containsRatingById_notContains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(false);
+
+        boolean result = commonComponent.containsRatingById(userId, eventId);
+        assertFalse(result);
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0220_NS02_containsRatingById_notContains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(false);
+
+        boolean result = commonComponent.containsRatingById(RatingId.of(userId, eventId));
+        assertFalse(result);
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0230_PS01_ratingExists_contains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> commonComponent.ratingExists(userId, eventId));
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0230_PS02_ratingExists_contains() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> commonComponent.ratingExists(RatingId.of(userId, eventId)));
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0230_NS01_ratingExists_notContains_throwsRatingNotFoundException() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(false);
+
+        RuntimeException exception = assertThrows(RatingNotFoundException.class, () -> commonComponent.ratingExists(userId, eventId));
+        assertEquals(String.format(RATING_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0230_NS02_ratingExists_notContains_throwsRatingNotFoundException() {
+        Mockito.when(ratingRepository.existsById(RatingId.of(userId, eventId)))
+                .thenReturn(false);
+
+        RuntimeException exception = assertThrows(RatingNotFoundException.class, () -> commonComponent.ratingExists(RatingId.of(userId, eventId)));
+        assertEquals(String.format(RATING_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(ratingRepository, Mockito.only()).existsById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0240_PS01_getRatingById_contains() {
+        Mockito.when(ratingRepository.findById(RatingId.of(userId, eventId)))
+                .thenReturn(Optional.of(rating));
+
+        Rating gotRating = commonComponent.getRatingById(userId, eventId);
+
+        assertNotNull(gotRating);
+        assertEquals(rating.getUserId(), gotRating.getUserId());
+        assertEquals(rating.getEventId(), gotRating.getEventId());
+        assertEquals(rating.getRating(), gotRating.getRating());
+
+        Mockito.verify(ratingRepository, Mockito.only()).findById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+
+    @Test
+    public void test_T0240_PS02_getRatingById_contains() {
+        Mockito.when(ratingRepository.findById(RatingId.of(userId, eventId)))
+                .thenReturn(Optional.of(rating));
+
+        Rating gotRating = commonComponent.getRatingById(RatingId.of(userId, eventId));
+
+        assertNotNull(gotRating);
+        assertEquals(rating.getUserId(), gotRating.getUserId());
+        assertEquals(rating.getEventId(), gotRating.getEventId());
+        assertEquals(rating.getRating(), gotRating.getRating());
+
+        Mockito.verify(ratingRepository, Mockito.only()).findById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0240_NS01_getRatingById_notContains_throwsRatingNotFoundException() {
+        Mockito.when(ratingRepository.findById(RatingId.of(userId, eventId)))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RatingNotFoundException.class, () -> commonComponent.getRatingById(userId, eventId));
+        assertEquals(String.format(RATING_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(ratingRepository, Mockito.only()).findById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
+    }
+
+    @Test
+    public void test_T0240_NS02_getRatingById_notContains_throwsRatingNotFoundException() {
+        Mockito.when(ratingRepository.findById(RatingId.of(userId, eventId)))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RatingNotFoundException.class, () -> commonComponent.getRatingById(RatingId.of(userId, eventId)));
+        assertEquals(String.format(RATING_NOT_FOUND, userId, eventId), exception.getMessage());
+
+        Mockito.verify(ratingRepository, Mockito.only()).findById(RatingId.of(userId, eventId));
+        Mockito.verifyNoMoreInteractions(ratingRepository);
+
+        Mockito.verifyNoInteractions(onlyRatingRepo);
     }
 }
