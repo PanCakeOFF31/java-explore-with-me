@@ -2,6 +2,4 @@
 
 Template repository for ExploreWithMe project.
 
-<a href="https://github.com/PanCakeOFF31/java-explore-with-me/pull/7">Pull-reques link</a>
-
-https://github.com/PanCakeOFF31/java-explore-with-me/pull/7
+<a href="https://github.com/PanCakeOFF31/java-explore-with-me/pull/7">Pull-reques link</a> - https://github.com/PanCakeOFF31/java-explore-with-me/pull/7
